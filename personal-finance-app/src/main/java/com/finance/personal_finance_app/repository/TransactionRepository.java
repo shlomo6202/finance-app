@@ -6,8 +6,12 @@ import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-    // --- התיקון לשגיאה האדומה: הוספת הפונקציה החסרה ---
+    // שליפה בסיסית (ללא מיון מובטח)
     List<Transaction> findAllByUserId(Long userId);
+
+    // --- התוספת הנדרשת ---
+    // שליפת כל העסקאות של המשתמש, כשהן ממוינות לפי תאריך (מהחדש לישן)
+    List<Transaction> findAllByUserIdOrderByDateDesc(Long userId);
 
     // פונקציה לשליפת 4 עסקאות אחרונות לפי יוזר (עבור הדשבורד)
     List<Transaction> findTop4ByUserIdOrderByDateDesc(Long userId);

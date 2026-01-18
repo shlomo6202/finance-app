@@ -2,54 +2,61 @@ package com.finance.personal_finance_app.controller;
 
 import com.finance.personal_finance_app.model.User;
 import com.finance.personal_finance_app.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173") // מאפשר לפרונט לגשת
 public class AuthController {
 
-    private final UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-    public AuthController(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    // הרשמה - בודק אם המייל קיים
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
-            return ResponseEntity.badRequest().body("האימייל הזה כבר רשום במערכת");
+    public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
+        String username = body.get("username");
+        String email = body.get("email");
+        String password = body.get("password"); // הסיסמה שהגיעה מהפרונט
+
+        if (userRepository.findByEmail(email).isPresent()) {
+            return ResponseEntity.badRequest().body("Email already exists");
         }
 
-        // יצירת חותמת זמן אם חסרה
-        if (user.getCreatedAt() == null) {
-            user.setCreatedAt(java.time.LocalDateTime.now());
-        }
+        User newUser = new User();
+        newUser.setUsername(username);
+        newUser.setEmail(email);
 
-        userRepository.save(user);
-        return ResponseEntity.ok(user);
+        // התיקון: אנחנו שומרים את הסיסמה (במצב אמיתי היינו מצפינים אותה)
+        // מכיוון שאין לנו ספריית אבטחה כרגע, נשמור אותה כמו שהיא או כהאש פשוט
+        newUser.setPasswordHash(password);
+
+        userRepository.save(newUser);
+
+        return ResponseEntity.ok(Map.of("message", "User registered successfully", "userId", newUser.getId()));
     }
 
-    // התחברות - בודק מייל וסיסמה (מול password_hash)
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> loginData) {
-        String email = loginData.get("email");
-        String password = loginData.get("password");
+    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String password = body.get("password");
 
-        Optional<User> userOpt = userRepository.findByEmail(email);
-
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            // כאן מתבצעת ההשוואה. הערה: במערכת אמיתית משווים HASH, כאן נשווה סטרינגים כרגע
-            if (user.getPassword().equals(password)) {
-                return ResponseEntity.ok(user);
-            }
-        }
-        return ResponseEntity.status(401).body("שגיאה: שם משתמש או סיסמה לא נכונים");
+        return userRepository.findByEmail(email)
+                .map(user -> {
+                    // בדיקת סיסמה פשוטה (התאמה למה ששמרנו למעלה)
+                    if (user.getPasswordHash().equals(password)) {
+                        return ResponseEntity.ok(Map.of(
+                                "id", user.getId(),
+                                "username", user.getUsername(),
+                                "email", user.getEmail()
+                        ));
+                    } else {
+                        return ResponseEntity.status(401).body("Invalid credentials");
+                    }
+                })
+                .orElse(ResponseEntity.status(401).body("User not found"));
     }
 }

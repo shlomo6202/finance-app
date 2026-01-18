@@ -10,6 +10,7 @@ import WalletScreen from './screens/WalletScreen';
 import AboutScreen from './screens/AboutScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import InvestmentsScreen from './screens/InvestmentsScreen';
 
 // ייבוא התפריט התחתון
 import BottomNav from './components/BottomNav';
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/wallet" element={<WalletScreen />} />
           <Route path="/history" element={<HistoryScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
+          <Route path="/investments" element={<InvestmentsScreen />} />
           
           {/* ניתוב ברירת מחדל */}
           <Route path="*" element={<Navigate to="/login" replace />} />
