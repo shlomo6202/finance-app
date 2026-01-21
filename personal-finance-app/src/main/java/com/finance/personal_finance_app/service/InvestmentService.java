@@ -35,11 +35,11 @@ public class InvestmentService {
 
             // --- התיקון: עטיפה ב-try-catch למניעת קריסה ---
             try {
-                // מנסים להביא מחיר עדכני
+                // מנסים להביא מחיר עדכני מה-API
                 currentPrice = priceService.getStockPrice(stock.getTicker());
             } catch (Exception e) {
-                // במקרה של שגיאה (למשל: נגמרה מכסת ה-API), נדפיס אזהרה ונשתמש במחיר הקנייה
-                System.err.println("API Error for " + stock.getTicker() + ": " + e.getMessage());
+                // אם נכשל (למשל: נגמרה המכסה), מדפיסים לוג וממשיכים
+                System.err.println("Could not fetch price for " + stock.getTicker() + ". Reason: " + e.getMessage());
                 currentPrice = null;
             }
             // --------------------------------------------------
@@ -49,7 +49,7 @@ public class InvestmentService {
                 currentPrice = BigDecimal.valueOf(stock.getAverageBuyPrice());
             }
 
-            // המרה לחישוב שווי שוק
+            // חישוב שווי שוק בצורה בטוחה עם BigDecimal
             BigDecimal quantityBD = BigDecimal.valueOf(stock.getQuantity());
             double marketValue = currentPrice.multiply(quantityBD).doubleValue();
 
@@ -83,17 +83,24 @@ public class InvestmentService {
                 .build();
     }
 
-    // שאר הפונקציות (buyStock וכו') נשארות ללא שינוי...
+    // פונקציה להוספת מניה (סימולציה של קנייה)
     public void buyStock(Long userId, String ticker, Double quantity, Double price) {
         User user = userRepository.findById(userId).orElseThrow();
+
+        // בדיקה אם המניה כבר קיימת כדי לעשות ממוצע
         Stock stock = stockRepository.findByUserAndTicker(user, ticker)
                 .orElse(new Stock(null, user, ticker, 0.0, 0.0));
+
         double newQuantity = stock.getQuantity() + quantity;
         double totalCostOld = stock.getQuantity() * stock.getAverageBuyPrice();
         double totalCostNew = quantity * price;
+
+        // חישוב ממוצע משוקלל חדש
         double newAveragePrice = (totalCostOld + totalCostNew) / newQuantity;
+
         stock.setQuantity(newQuantity);
         stock.setAverageBuyPrice(newAveragePrice);
+
         stockRepository.save(stock);
     }
 }

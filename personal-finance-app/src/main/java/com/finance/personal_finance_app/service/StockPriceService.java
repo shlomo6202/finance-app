@@ -28,10 +28,16 @@ public class StockPriceService {
                 apiKey
         );
 
-        // בדיקת תקינות התשובה
+        // --- תיקון: בדיקה אם נגמרה המכסה או חזרה הודעת מערכת ---
+        if (response.containsKey("Note") || response.containsKey("Information")) {
+            System.err.println("Alpha Vantage API Limit Reached for " + symbol + ": " + response);
+            throw new RuntimeException("API Rate Limit Exceeded or Info Message received");
+        }
+        // --------------------------------------------------------
+
+        // בדיקת תקינות התשובה (האם קיים המפתח Global Quote)
         if (response == null || !response.containsKey("Global Quote")) {
-            System.out.println("AlphaVantage Response for " + symbol + ": " + response);
-            // -----------------------------------------------------
+            System.out.println("Full Response: " + response); // הדפסה לדיבאג
             throw new RuntimeException("Invalid response or symbol not found: " + symbol);
         }
 
