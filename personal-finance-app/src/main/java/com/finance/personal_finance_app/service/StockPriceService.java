@@ -30,6 +30,8 @@ public class StockPriceService {
 
         // בדיקת תקינות התשובה
         if (response == null || !response.containsKey("Global Quote")) {
+            System.out.println("AlphaVantage Response for " + symbol + ": " + response);
+            // -----------------------------------------------------
             throw new RuntimeException("Invalid response or symbol not found: " + symbol);
         }
 

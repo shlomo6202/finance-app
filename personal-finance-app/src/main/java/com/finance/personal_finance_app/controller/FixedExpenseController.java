@@ -1,7 +1,9 @@
 package com.finance.personal_finance_app.controller;
 
+import com.finance.personal_finance_app.model.Category; // Import Category
 import com.finance.personal_finance_app.model.FixedExpense;
 import com.finance.personal_finance_app.model.User;
+import com.finance.personal_finance_app.repository.CategoryRepository; // Import Repo
 import com.finance.personal_finance_app.repository.UserRepository;
 import com.finance.personal_finance_app.service.FixedExpenseService;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +18,15 @@ public class FixedExpenseController {
 
     private final FixedExpenseService fixedExpenseService;
     private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository; // 1. הוספת רפוזיטורי לקטגוריות
 
-    public FixedExpenseController(FixedExpenseService fixedExpenseService, UserRepository userRepository) {
+
+    public FixedExpenseController(FixedExpenseService fixedExpenseService,
+                                  UserRepository userRepository,
+                                  CategoryRepository categoryRepository) {
         this.fixedExpenseService = fixedExpenseService;
         this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @GetMapping("/user/{userId}")
@@ -36,10 +43,17 @@ public class FixedExpenseController {
         expense.setUser(user);
         expense.setDescription(request.description);
 
-        // המרה: אם ה-Entity שלך משתמש ב-Double, אנחנו ממירים את ה-BigDecimal שמגיע מהבקשה
+        // המרת סכום
         expense.setAmount(request.amount.doubleValue());
-
         expense.setDayOfMonth(request.dayOfMonth);
+
+
+        if (request.categoryId != null) {
+            Category category = categoryRepository.findById(request.categoryId)
+                    .orElse(null); // או לזרוק שגיאה אם חייב
+            expense.setCategory(category);
+        }
+        // ----------------------------------
 
         return ResponseEntity.ok(fixedExpenseService.saveFixedExpense(expense));
     }
@@ -50,11 +64,12 @@ public class FixedExpenseController {
         return ResponseEntity.ok().build();
     }
 
-    // DTO לקליטת הנתונים מה-Frontend
+    // עדכון ה-DTO
     public static class FixedExpenseRequest {
         public Long userId;
         public String description;
-        public java.math.BigDecimal amount; // React שולח מספרים, BigDecimal עדיף לקליטה ראשונית
+        public java.math.BigDecimal amount;
         public Integer dayOfMonth;
+        public Long categoryId; // 2. שדה חדש
     }
 }

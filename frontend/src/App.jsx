@@ -6,7 +6,6 @@ import DashboardScreen from './screens/DashboardScreen';
 import AnalyticsScreen from './screens/AnalyticsScreen';
 import LoginScreen from './screens/LoginScreen';
 import RegisterScreen from './screens/RegisterScreen';
-import WalletScreen from './screens/WalletScreen';
 import AboutScreen from './screens/AboutScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import ProfileScreen from './screens/ProfileScreen';
@@ -22,8 +21,7 @@ const Layout = ({ children }) => {
   // רשימת המסכים בהם נציג את הניווט ואת הבוט
   const showNav = [
     '/dashboard', 
-    '/analytics', 
-    '/wallet', 
+    '/analytics',  
     '/profile', 
     '/history', 
     '/investments',
@@ -60,7 +58,6 @@ export default function App() {
           {/* מסכים פנימיים */}
           <Route path="/dashboard" element={<DashboardScreen />} />
           <Route path="/analytics" element={<AnalyticsScreen />} />
-          <Route path="/wallet" element={<WalletScreen />} />
           <Route path="/history" element={<HistoryScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="/investments" element={<InvestmentsScreen />} />

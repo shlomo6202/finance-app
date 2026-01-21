@@ -31,23 +31,27 @@ public class InvestmentService {
         List<PortfolioDashboardDTO.StockPositionDTO> stockDTOs = new ArrayList<>();
 
         for (Stock stock : myStocks) {
-            // "מציצים" לבורסה להביא מחיר עדכני
-            BigDecimal currentPrice = priceService.getStockPrice(stock.getTicker());
+            BigDecimal currentPrice;
 
-            // אם ה-API נכשל (נגמרה המכסה), נשתמש במחיר הקנייה כגיבוי
+            // --- התיקון: עטיפה ב-try-catch למניעת קריסה ---
+            try {
+                // מנסים להביא מחיר עדכני
+                currentPrice = priceService.getStockPrice(stock.getTicker());
+            } catch (Exception e) {
+                // במקרה של שגיאה (למשל: נגמרה מכסת ה-API), נדפיס אזהרה ונשתמש במחיר הקנייה
+                System.err.println("API Error for " + stock.getTicker() + ": " + e.getMessage());
+                currentPrice = null;
+            }
+            // --------------------------------------------------
+
+            // מנגנון הגיבוי: אם ה-API נכשל, משתמשים במחיר הקנייה הממוצע
             if (currentPrice == null) {
                 currentPrice = BigDecimal.valueOf(stock.getAverageBuyPrice());
             }
 
-            // --- התיקון: חישוב שווי שוק באמצעות BigDecimal ---
-
-            // 1. המרת הכמות (שהיא double) ל-BigDecimal
+            // המרה לחישוב שווי שוק
             BigDecimal quantityBD = BigDecimal.valueOf(stock.getQuantity());
-
-            // 2. ביצוע הכפל: מחיר * כמות -> והמרה חזרה ל-double למשתנה marketValue
             double marketValue = currentPrice.multiply(quantityBD).doubleValue();
-
-            // --------------------------------------------------
 
             double invested = stock.getAverageBuyPrice() * stock.getQuantity();
             double gain = marketValue - invested;
@@ -79,24 +83,17 @@ public class InvestmentService {
                 .build();
     }
 
-    // פונקציה להוספת מניה (סימולציה של קנייה)
+    // שאר הפונקציות (buyStock וכו') נשארות ללא שינוי...
     public void buyStock(Long userId, String ticker, Double quantity, Double price) {
         User user = userRepository.findById(userId).orElseThrow();
-
-        // בדיקה אם המניה כבר קיימת כדי לעשות ממוצע
         Stock stock = stockRepository.findByUserAndTicker(user, ticker)
                 .orElse(new Stock(null, user, ticker, 0.0, 0.0));
-
         double newQuantity = stock.getQuantity() + quantity;
         double totalCostOld = stock.getQuantity() * stock.getAverageBuyPrice();
         double totalCostNew = quantity * price;
-
-        // חישוב ממוצע משוקלל חדש
         double newAveragePrice = (totalCostOld + totalCostNew) / newQuantity;
-
         stock.setQuantity(newQuantity);
         stock.setAverageBuyPrice(newAveragePrice);
-
         stockRepository.save(stock);
     }
 }

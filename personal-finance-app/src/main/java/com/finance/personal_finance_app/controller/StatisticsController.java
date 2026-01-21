@@ -15,16 +15,13 @@ public class StatisticsController {
 
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
-    private final CreditCardRepository creditCardRepository;
     private final FixedExpenseRepository fixedExpenseRepository;
 
     public StatisticsController(TransactionRepository transactionRepository,
                                 CategoryRepository categoryRepository,
-                                CreditCardRepository creditCardRepository,
                                 FixedExpenseRepository fixedExpenseRepository) {
         this.transactionRepository = transactionRepository;
         this.categoryRepository = categoryRepository;
-        this.creditCardRepository = creditCardRepository;
         this.fixedExpenseRepository = fixedExpenseRepository;
     }
 
@@ -157,19 +154,6 @@ public class StatisticsController {
         return result;
     }
 
-    // --- כרטיסי אשראי ---
-    @GetMapping("/cards")
-    public List<CreditCard> getCards(@RequestParam Long userId) {
-        return creditCardRepository.findAllByUserId(userId);
-    }
-
-    @PostMapping("/cards/add")
-    public CreditCard addCard(@RequestBody CreditCard card, @RequestParam Long userId) {
-        User user = new User();
-        user.setId(userId);
-        card.setUser(user);
-        return creditCardRepository.save(card);
-    }
 
     // --- קטגוריות ---
     @GetMapping("/categories-list")
