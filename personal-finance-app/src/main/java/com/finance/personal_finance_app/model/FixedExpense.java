@@ -25,6 +25,10 @@ public class FixedExpense {
     @JsonIgnore
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     public FixedExpense() {}
 
     public FixedExpense(String description, Double amount, int dayOfMonth, User user) {

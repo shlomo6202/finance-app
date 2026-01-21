@@ -11,18 +11,19 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 public class ClientConfig {
 
     @Bean
-    public AlphaVantageClient alphaVantageClient(WebClient.Builder builder) {
-        // 1. הגדרת הכתובת הבסיסית של Alpha Vantage
-        WebClient webClient = builder
+    public AlphaVantageClient alphaVantageClient() {
+        // 1. יצירת WebClient בסיסי עם הכתובת של Alpha Vantage
+        WebClient client = WebClient.builder()
                 .baseUrl("https://www.alphavantage.co")
                 .build();
 
-        // 2. יצירת המפעל שמייצר את האימפלמנטציה
-        HttpServiceProxyFactory factory = HttpServiceProxyFactory
-                .builderFor(WebClientAdapter.create(webClient))
-                .build();
+        // 2. יצירת מתאם (Adapter) בין ה-WebClient לממשק
+        WebClientAdapter adapter = WebClientAdapter.create(client);
 
-        // 3. החזרת הקליינט המוכן לשימוש
+        // 3. יצירת מפעל (Factory) ליצירת המימוש
+        HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
+
+        // 4. יצירת ה-Client בפועל והחזרתו כ-Bean
         return factory.createClient(AlphaVantageClient.class);
     }
 }

@@ -11,6 +11,7 @@ import AboutScreen from './screens/AboutScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import InvestmentsScreen from './screens/InvestmentsScreen';
+import FixedExpensesScreen from './screens/FixedExpensesScreen';
 
 // ייבוא התפריט התחתון
 import BottomNav from './components/BottomNav';
@@ -24,7 +25,9 @@ const Layout = ({ children }) => {
     '/analytics', 
     '/wallet', 
     '/profile', 
-    '/history'
+    '/history', 
+    '/investments',
+    '/fixed-expenses'
   ].includes(location.pathname);
 
   return (
@@ -61,6 +64,7 @@ export default function App() {
           <Route path="/history" element={<HistoryScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="/investments" element={<InvestmentsScreen />} />
+          <Route path="/fixed-expenses" element={<FixedExpensesScreen />} />
           
           {/* ניתוב ברירת מחדל */}
           <Route path="*" element={<Navigate to="/login" replace />} />

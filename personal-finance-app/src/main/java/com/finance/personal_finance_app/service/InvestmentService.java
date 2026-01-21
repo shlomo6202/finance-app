@@ -8,6 +8,7 @@ import com.finance.personal_finance_app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,18 +31,27 @@ public class InvestmentService {
         List<PortfolioDashboardDTO.StockPositionDTO> stockDTOs = new ArrayList<>();
 
         for (Stock stock : myStocks) {
-            // כאן הקסם: "מציצים" לבורסה להביא מחיר עדכני
-            Double currentPrice = priceService.getPrice(stock.getTicker());
+            // "מציצים" לבורסה להביא מחיר עדכני
+            BigDecimal currentPrice = priceService.getStockPrice(stock.getTicker());
 
-            // אם ה-API נכשל (נגמרה המכסה), נשתמש במחיר הקנייה כגיבוי (או מחיר אחרון ידוע)
+            // אם ה-API נכשל (נגמרה המכסה), נשתמש במחיר הקנייה כגיבוי
             if (currentPrice == null) {
-                currentPrice = stock.getAverageBuyPrice();
+                currentPrice = BigDecimal.valueOf(stock.getAverageBuyPrice());
             }
 
-            double marketValue = currentPrice * stock.getQuantity();
+            // --- התיקון: חישוב שווי שוק באמצעות BigDecimal ---
+
+            // 1. המרת הכמות (שהיא double) ל-BigDecimal
+            BigDecimal quantityBD = BigDecimal.valueOf(stock.getQuantity());
+
+            // 2. ביצוע הכפל: מחיר * כמות -> והמרה חזרה ל-double למשתנה marketValue
+            double marketValue = currentPrice.multiply(quantityBD).doubleValue();
+
+            // --------------------------------------------------
+
             double invested = stock.getAverageBuyPrice() * stock.getQuantity();
             double gain = marketValue - invested;
-            double gainPercent = (gain / invested) * 100;
+            double gainPercent = (invested > 0) ? (gain / invested) * 100 : 0;
 
             totalValue += marketValue;
             totalInvested += invested;

@@ -2,6 +2,8 @@ package com.finance.personal_finance_app.dto;
 
 import lombok.Builder;
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -19,7 +21,7 @@ public class PortfolioDashboardDTO {
         private String ticker;
         private Double quantity;
         private Double averagePrice;
-        private Double currentPrice;
+        private BigDecimal currentPrice;
         private Double marketValue;  // שווי נוכחי של הפוזיציה
         private Double gain;         // רווח על המניה הזו
         private Double gainPercent;

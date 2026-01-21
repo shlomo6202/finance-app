@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../api/axiosClient'; 
 import { 
   Bell, Eye, Calendar, PiggyBank, 
   ChevronLeft, ShoppingCart, Car, Home, Zap, Star, Coffee,
@@ -16,7 +16,6 @@ const DashboardScreen = () => {
   const [transactionType, setTransactionType] = useState('EXPENSE'); 
   const [formData, setFormData] = useState({ description: '', amount: '', categoryId: '' });
   
-  // מודל להוספת קטגוריה
   const [showNewCatModal, setShowNewCatModal] = useState(false);
   const [newCatName, setNewCatName] = useState("");
 
@@ -27,13 +26,9 @@ const DashboardScreen = () => {
  
       try {
         const [dashboardRes, catRes] = await Promise.all([
-          // זה נשאר תקין (סטטיסטיקות)
-          axios.get(`http://localhost:8080/api/stats/dashboard?userId=${user.id}`),
-
-          // --- התיקון: שינוי הנתיב לקונטרולר החדש ---
-          // במקום: api/stats/categories-list
-          // שנה ל: api/categories/list
-          axios.get(`http://localhost:8080/api/categories/list?userId=${user.id}`)
+          // שים לב: הנתיבים קצרים יותר ואין צורך ב-localhost
+          apiClient.get(`/stats/dashboard?userId=${user.id}`),
+          apiClient.get(`/categories/list?userId=${user.id}`)
         ]);
         setData(dashboardRes.data);
         setCategories(catRes.data);
@@ -49,17 +44,14 @@ const DashboardScreen = () => {
       if (!user) return;
 
       try {
-        // התאמת ה-API לפי סוג הפעולה (הכנסה/הוצאה)
-        // שים לב: וודא שיש לך את ה-Controller הזה בשרת, אחרת צריך ליצור אותו
-        await axios.post('http://localhost:8080/api/transactions/add', {
+        await apiClient.post('/transactions/add', {
             userId: user.id,
             description: formData.description,
             amount: parseFloat(formData.amount), // המרה למספר
             categoryId: formData.categoryId,
-            type: transactionType // INCOME או EXPENSE
+            type: transactionType // הערך הוא כבר 'INCOME' או 'EXPENSE' וזה תואם ל-Enum בשרת
         });
         
-        // איפוס הטופס ורענון הנתונים
         setFormData({ description: '', amount: '', categoryId: '' });
         fetchDashboardData(); 
       } catch (error) {
@@ -68,7 +60,7 @@ const DashboardScreen = () => {
       }
   }; 
   
-  // --- הוספת קטגוריה חדשה (הלוגיקה שביקשת) ---
+  // --- הוספת קטגוריה חדשה ---
   const handleAddCategory = async () => {
     if (!newCatName.trim()) return;
     
@@ -76,21 +68,18 @@ const DashboardScreen = () => {
     if (!user) return;
 
     try {
-      const res = await axios.post('http://localhost:8080/api/categories/add', {
+      const res = await apiClient.post('/categories/add', {
         name: newCatName,
         userId: user.id
       });
       
-      // הוספה לרשימה המקומית כדי לראות מיד
       setCategories([...categories, res.data]);
-      
-      // בחירה אוטומטית של החדש, איפוס וסגירה
       setFormData({ ...formData, categoryId: res.data.id });
       setNewCatName("");
       setShowNewCatModal(false);
     } catch (err) {
       console.error("Failed to add category", err);
-      alert("שגיאה ביצירת קטגוריה (אולי השם כבר קיים?)");
+      alert("שגיאה ביצירת קטגוריה");
     }
   };
 
@@ -98,18 +87,16 @@ const DashboardScreen = () => {
   const handleDelete = async (id) => { 
       if(!window.confirm("האם למחוק תנועה זו?")) return;
       try {
-          await axios.delete(`http://localhost:8080/api/transactions/${id}`);
+          await apiClient.delete(`/transactions/${id}`);
           fetchDashboardData();
       } catch (error) {
           console.error("Failed to delete", error);
       }
   };
 
-  // --- אייקונים וצבעים לקטגוריות ---
+  // פונקציית העיצוב נשארה ללא שינוי, העתקתי אותה לקוצר יריעה
   const getCategoryStyle = (categoryName) => {
-    // אם אין שם (כמו בהכנסה כללית), נחזיר דיפולט
     const safeName = categoryName || 'General';
-    
     const styles = {
       'Food': { icon: <ShoppingCart size={20} />, bg: 'bg-orange-50 text-orange-500 dark:bg-orange-900/30' },
       'Transport': { icon: <Car size={20} />, bg: 'bg-blue-50 text-blue-500 dark:bg-blue-900/30' },
@@ -119,16 +106,18 @@ const DashboardScreen = () => {
       'Entertainment': { icon: <Coffee size={20} />, bg: 'bg-pink-50 text-pink-500 dark:bg-pink-900/30' },
       'Salary': { icon: <TrendingUp size={20} />, bg: 'bg-green-50 text-green-500 dark:bg-green-900/30' }
     };
-    
-    // חיפוש לפי מפתח, או החזרת ברירת מחדל
     return styles[Object.keys(styles).find(key => safeName.includes(key))] || 
            { icon: <Star size={20} />, bg: 'bg-gray-50 text-gray-500 dark:bg-gray-800' };
   };
 
+  // ה-return זהה לחלוטין לקוד המקורי, רק עם שינוי אחד קטן ב-DashboardScreen 
+  // אין צורך לשנות את ה-JSX עצמו כיוון שהלוגיקה טופלה בפונקציות למעלה
   return (
     <div className="pb-8 min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      
-      {/* Header */}
+        {/* ... (כל קוד ה-JSX של ה-UI נשאר זהה לקובץ המקורי שלך) ... */}
+        {/* העתק לכאן את ה-JSX מהקובץ המקורי החל מ- <header> ועד הסוף */}
+        
+        {/* Header */}
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md px-5 py-4 flex justify-between items-center shadow-sm border-b border-gray-100 dark:bg-gray-800/90 dark:border-gray-700">
         <div>
           <span className="text-sm text-gray-500 block font-medium mb-0.5 dark:text-gray-400">שלום 👋</span>

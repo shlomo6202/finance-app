@@ -1,9 +1,12 @@
 package com.finance.personal_finance_app.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -19,11 +22,15 @@ public class PortfolioSnapshot {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Column(nullable = false)
     private LocalDate snapshotDate; // התאריך של ה"צילום"
 
     @Column(nullable = false)
-    private Double totalValueUsd; // כמה התיק היה שווה באותו רגע (בדולרים)
+    private BigDecimal totalValueUsd;// כמה התיק היה שווה באותו רגע (בדולרים)
+
+    @Column(name = "total_invested")
+    private BigDecimal totalInvested;
 }
